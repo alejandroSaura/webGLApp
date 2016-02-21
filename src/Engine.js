@@ -1,10 +1,45 @@
 
+// MAIN APP MODULE
+
 var gl;
 var shaderProgram;
 
 // common uniforms
 var pMatrix = mat4.create();
 
+// geometry definition
+cubeVertices = [
+         0.0, 0.0, 0.0,
+         1.0, 0.0, 0.0,
+         1.0, 1.0, 0.0,
+         0.0, 1.0, 0.0,
+         0.0, 0.0, 1.0,
+         1.0, 0.0, 1.0,
+         1.0, 1.0, 1.0,
+         0.0, 1.0, 1.0
+];
+cubeIndices = [
+        0, 1, 3,
+        1, 2, 3,
+
+        4, 7, 5,
+        5, 7, 6,
+
+        5, 6, 2,
+        1, 5, 2,
+
+        4, 0, 3,
+        4, 3, 7,
+
+        2, 6, 7,
+        2, 7, 3,
+
+        1, 0, 4,
+        1, 4, 5
+];
+
+// scene elements
+var entities = [];
 
 function initGL(canvas)
 {
@@ -31,25 +66,57 @@ function webGLStart()
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.enable(gl.DEPTH_TEST);
 
+    createScene();
     drawScene();
+
+    // enter game loop
+    window.requestAnimationFrame(gameLoop);
+}
+
+function createScene()
+{
+    var entity = new Entity([1.5, 0.0, -7.0], cubeVertices, cubeIndices, shaderProgram);
+    entities.push(entity);
+}
+
+var updateInterval = 1000.0 / 60.0;
+var lastTime = 0;
+function gameLoop()
+{
+    // control the time elapsed to update each 1/60 seconds...
+    var time = new Date().getTime();
+    if (time - lastTime > updateInterval)
+    {
+        var deltaTime = time - lastTime;
+        Update(deltaTime);
+        lastTime = time;
+    }    
+
+    drawScene(); // but draw each frame
+    window.requestAnimationFrame(gameLoop); // ask to be called again
+}
+
+function Update(deltaTime)
+{
+    console.log("update is being called");
+    //TO-DO: move things and do networking
 }
 
 function drawScene()
 {
+    // clear viewport
     gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
+    // set camera    
     mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, pMatrix);
-    gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix);    
-
-    vertices = [
-         1.0, 1.0, 0.0,
-        -1.0, 1.0, 0.0,
-         1.0, -1.0, 0.0,
-        -1.0, -1.0, 0.0
-    ];
-    var entity = new Entity([1.5, 0.0, -7.0], vertices, shaderProgram);
-    entity.render();
+    gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix);   
+    
+    // render all entities on the scene
+    for (i = 0; i < entities.length; i++)
+    {
+        entities[i].render();
+    }    
 }
 
 
